@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "87e85e62801379d9382f790e4d679b4403203a27b295cefe03ce40183ff00dbd"
+            "sha256": "65528371249320871ffce7bd342c717c1b9e913dc3bf4fc5c1cd1168ee27fd5a"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -335,6 +335,15 @@
             ],
             "markers": "python_version >= '3.8'",
             "version": "==2.2.2"
+        },
+        "webvtt-py": {
+            "hashes": [
+                "sha256:2040dd325277ddadc1e0c6cc66cbc4a1d9b6b49b24c57a0c3364374c3e8a3dc1",
+                "sha256:9d517d286cfe7fc7825e9d4e2079647ce32f5678eb58e39ef544ffbb932610b7"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.7'",
+            "version": "==0.5.1"
         }
     },
     "develop": {}

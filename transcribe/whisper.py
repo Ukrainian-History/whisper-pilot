@@ -10,7 +10,7 @@ from functools import lru_cache
 from itertools import product
 
 import tqdm
-import whisper
+from pywhispercpp.model import Model
 from pydub import AudioSegment
 
 from . import utils
@@ -23,8 +23,10 @@ from . import utils
 #   condition_on_previous_text: True
 #   best_of: 5
 
+# Here are some things to try if it gets stuck on phantom repeats: https://github.com/ggerganov/whisper.cpp/issues/896
+
 whisper_options = {
-    "model_name": ["medium", "large", "large-v3"],
+    "model_name": ["medium", "large", "large-v3"],  # try a quantized one as well, maybe?
     "beam_size": [5, 10],
     "patience": [1.0, 2.0],
     "condition_on_previous_text": [True, False],
@@ -146,30 +148,11 @@ def transcribe(file_metadata, options):
     whisper_options["language"] = file_metadata["media_language"]
     audio = load_audio(file_metadata["media_filename"])
 
-    return whisper.transcribe(audio=audio, model=model, **whisper_options)
+    segments = model.transcribe(audio, **whisper_options)
+    # for segment in segments:
+    #     print(segment.text)
 
-
-def get_language(file, model_name):
-    model = load_model(model_name)
-    silences = get_silences(file)
-    n_mels = 128 if model_name == "large" else 80
-
-    if len(silences) > 0 and int(silences[0]["start_silence"]) == 0:
-        audio_segment = AudioSegment.from_file(file)
-        start_time = silences[0]["end_silence"] * 1000
-        end_time = (30 + silences[0]["end_silence"]) * 1000
-        clip = audio_segment[start_time:end_time]
-        with tempfile.NamedTemporaryFile() as tmp:
-            clip.export(tmp.name, format="wav")
-            audio = load_audio(tmp.name)
-    else:
-        audio = load_audio(file)
-
-    audioclip = whisper.pad_or_trim(audio)
-    mel = whisper.log_mel_spectrogram(audioclip, n_mels=n_mels).to(model.device)
-    _, probs = model.detect_language(mel)
-
-    return max(probs, key=probs.get)
+    return segments
 
 
 def get_silences(file):
@@ -215,13 +198,12 @@ def ffmpegcontentparse(content, field):
 @lru_cache(maxsize=1)
 def load_model(model_name):
     # cache the response since it takes some time to load
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    return whisper.load_model(model_name, device=device)
+    return Model(model_name)
 
 
 @lru_cache(maxsize=1)
 def load_audio(file):
-    return whisper.load_audio(file)
+    return Model._load_audio(file)
 
 
 def whisper_option_combinations():
