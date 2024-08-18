@@ -8,7 +8,6 @@ import textwrap
 from collections import Counter
 from io import StringIO
 
-import jiwer
 import webvtt
 
 base_csv_columns = [

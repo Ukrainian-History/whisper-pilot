@@ -9,7 +9,6 @@ from datetime import datetime
 from functools import lru_cache
 from itertools import product
 
-import torch
 import tqdm
 import whisper
 from pydub import AudioSegment

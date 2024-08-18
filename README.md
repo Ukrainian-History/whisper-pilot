@@ -1,28 +1,15 @@
 # whisper-pilot
  
-[![Build Status](https://github.com/sul-dlss/whisper-pilot/actions/workflows/test.yml/badge.svg)](https://github.com/sul-dlss/whisper-pilot/actions/workflows/test.yml)
 
-This repository contains code for testing OpenAI's Whisper for generating transcripts from audio and video files, and comparing results with AWS Transcribe and Google Speech APIs.
+This repository contains code for testing OpenAI's Whisper for generating transcripts from audio and video files. It is based on the tool of the same name from Stanford University Libraries modified for the specific needs of the Ukrainian History and Education Center. The UHEC does not have "ground truth" transcriptions to check for error rates, and whisper.cpp will be used instead of openai-whisper.
+
+At this point, it is likely that this code is in a broken state while it is being reconfigured for the UHEC's purposes.
 
 ## Data
 
-The data used in this analysis was determined ahead of time in this spreadsheet, which has a snapshot included in this repository as `sdr-data.csv`:
+The data used in this analysis was determined ahead of time in this spreadsheet, which has a snapshot included in this repository as `uhec-data.csv`.
 
-https://docs.google.com/spreadsheets/d/1sgcxy0eNwWTn1LeMVH8TDJ6J8qL8iIGfZ25t4nmYqyQ/edit#gid=0
-
-The items were exported as BagIt directories from SDR preservation using the [SDRGET](https://consul.stanford.edu/pages/viewpage.action?pageId=1646529897) process. The total amount of data is 596 GB. This includes the preservation masters, and service copies. Depending on the available storage you may only want to copy the service copies, but you'll want to preserve the directory structure of the bags.
-
-So assuming SDR-GET exported the bags to `/path/to/export` and you want rsync just the low service copies to `example.stanford.edu` you can:
-
-```
-rsync -rvhL --times --include "*/" --include "*.mp4" --include "*.m4a" --include "*.txt" --exclude "*" /path/to/export user@example.stanford.edu:pilot-data
-```
-
-The bags should be made available in a `data` directory that you create in the same directory you've cloned this repository to. Alternatively you can symlink the location to `data`
-
-## Manifest
-
-The specific media files and the transcripts that will be used as the gold standard for comparison are in the "manifest" `data.csv`. This file is what determines which files are transcribed, and where the transcription to compare against is. You will notice that the file paths assume they are relative to the `data` directory.
+The audio files were manually constructed from UHEC preservation/production masters or appropriate mezzanine files. The audio files should be made available in a `data` directory that you create in the same directory you've cloned this repository to. Alternatively you can symlink the location to `data`
 
 ## Whisper Options
 
@@ -30,7 +17,7 @@ The whisper options that are perturbed as part of the run are located in the whi
 
 https://github.com/sul-dlss/whisper-pilot/blob/83292dc8f32bc30a003d0e71362ad12733f66473/transcribe/whisper.py#L27-L33
 
-I guess these could have been command line options or a separate configuration file, but we knew what we wanted to test. This is where to make adjustments if you do want to test additional Whisper options.
+These could have been command line options or a separate configuration file, but we knew what we wanted to test. This is where to make adjustments if you do want to test additional Whisper options.
 
 ## Setup
 
@@ -53,14 +40,6 @@ Install dependencies:
 $ pip install -r requirements.txt
 ```
 
-To run the AWS and Google tests you'll need to:
-
-```
-$ cp env-example .env
-```
-
-And then edit it to add the relevant keys and other platform specific configuration.
-
 ## Run
 
 Then you can run the report:
@@ -69,10 +48,10 @@ Then you can run the report:
 $ ./run.py
 ```
 
-If you just want to run one of the report types you can, for example only run the AWS jobs:
+If you just want to run one of the report types you can, for example only run preprocessing:
 
 ```
-$ ./run --only aws
+$ ./run --only preprocessing
 ```
 
 ## Test
@@ -91,7 +70,7 @@ There are some Jupyter notebooks in the `notebooks` directory which you can view
 * [On Prem Estimate](https://github.com/sul-dlss/whisper-pilot/blob/main/notebooks/on-prem-estimate.ipynb): an estimate of how long it will take to run our backlog through Whisper using hardware similar to the RDS GPU work station.
 * [Whisper Options](https://github.com/sul-dlss/whisper-pilot/blob/main/notebooks/whisper-options.ipynb) examining the effects of adjusting several Whisper options.
 
-If you want to interact with them you'll need to run Jupyter Lab which was installed with the dependencies:
+If you want to interact with them, you'll need to run Jupyter Lab which was installed with the dependencies:
 
 ```
 $ jupyter lab

@@ -5,3 +5,5 @@ ENV
 *.log
 .ipynb_checkpoints/
 data
+.idea
+*.xlsx

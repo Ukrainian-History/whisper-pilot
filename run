@@ -16,7 +16,7 @@ parser.add_argument("--output-dir", help="Path to a directory to write results")
 parser.add_argument("--manifest", default="data.csv", help="Path to data manifest CSV")
 parser.add_argument(
     "--only",
-    choices=["whisper", "preprocessing", "aws", "google"],
+    choices=["whisper", "preprocessing"],
     help="Only run one transcription type",
 )
 
@@ -41,20 +41,6 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-# run one of the transcription types individually or run them all
-if args.only == "whisper":
-    whisper.run(output_dir, args.manifest)
-elif args.only == "preprocessing":
-    whisper.run_preprocessing(output_dir, args.manifest)
-elif args.only == "aws":
-    aws.run(output_dir, args.manifest)
-elif args.only == "google":
-    google.run(output_dir, args.manifest)
-else:
-    whisper.run(output_dir, args.manifest)
-    print()
-    whisper.run_preprocessing(output_dir, args.manifest)
-    print()
-    aws.run(output_dir, args.manifest)
-    print()
-    google.run(output_dir, args.manifest)
+whisper.run(output_dir, args.manifest)
+print()
+whisper.run_preprocessing(output_dir, args.manifest)
