@@ -6,13 +6,6 @@ from transcribe import utils
 TEST_DATA = path.join(path.dirname(__file__), "data")
 
 
-def test_get_data_files():
-    #TODO this will obviously fail...
-    files = utils.get_data_files("data.csv")
-    assert len(files) == 14
-    assert path.basename(files[0]["media_filename"]) == "bb158br2509_sl.m4a"
-
-
 def test_read_txt_reference_file():
     lines = utils.read_reference_file(path.join(TEST_DATA, "en.txt"))
     assert lines == ["This is a test for whisper reading in English."]

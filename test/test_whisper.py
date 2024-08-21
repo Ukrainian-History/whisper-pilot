@@ -20,12 +20,11 @@ def test_transcribe():
         {
             "media_filename": path.join(TEST_DATA, "en.wav"),
             "media_language": "en",
-            "transcript_language": "en",
         },
         {"model_name": MODEL_SIZE},
     )
 
-    assert t[0].text == "This is a test for whisper reading in English."
+    assert t["segments"][0]["text"] == " This is a test for whisper reading in English."
     # assert t["language"] == "en"
 
 
@@ -39,7 +38,7 @@ def test_transcribe_fr():
         {"model_name": MODEL_SIZE},
     )
     assert (
-        t[0].text
+        t["segments"][0]["text"]
         == "Il s'agit d'un test de lecture de Whispel en français."
     )
     # assert t["language"] == "fr"

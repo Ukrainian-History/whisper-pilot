@@ -6,14 +6,14 @@ import logging
 import os
 import sys
 
-from transcribe import aws, google, whisper
+from transcribe import whisper
 
 parser = argparse.ArgumentParser(
     prog="run", description="Run transcription generation for sample data"
 )
 
 parser.add_argument("--output-dir", help="Path to a directory to write results")
-parser.add_argument("--manifest", default="data.csv", help="Path to data manifest CSV")
+parser.add_argument("--manifest", default="uhec-data.csv", help="Path to data manifest CSV")
 parser.add_argument(
     "--only",
     choices=["whisper", "preprocessing"],

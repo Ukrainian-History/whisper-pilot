@@ -5,7 +5,7 @@ import os
 import re
 import string
 import textwrap
-from collections import Counter
+from collections import Counter, defaultdict
 from io import StringIO
 
 import webvtt
@@ -51,53 +51,6 @@ def write_report(rows, csv_path, extra_cols=[]):
         writer.writeheader()
         for row in rows:
             writer.writerow(row)
-
-
-def compare_transcripts(file, transcript, transcript_type, output_dir):
-    """
-    Compare the given file (a dictionary of file metadata, a row from data.csv).
-    To the given transcript result, and the transcript_type in order to
-    differentiate the different ways that results are represented. The
-    output_dir is supplied because in addition to returning the comparison an
-    HTML diff will be written to the output_dir.
-    """
-    run_id = f"{file['druid']}-{transcript_type}-{file['run_count']:03}"
-
-    if transcript_type == "google":
-        hypothesis, lang = parse_google(transcript)
-    elif transcript_type == "aws":
-        hypothesis, lang = parse_aws(transcript)
-    elif transcript_type == "whisper":
-        hypothesis, lang = parse_whisper(transcript)
-    else:
-        raise Exception("Unknown transcript type: {transcript_type}")
-
-    reference = read_reference_file(file["transcript_filename"])
-
-    stats = jiwer.process_words(clean_text(reference), clean_text(hypothesis))
-
-    diff_file = f"{run_id}.html"
-    diff_url = f"https://sul-dlss.github.io/whisper-pilot/{os.path.basename(output_dir)}/{diff_file}"
-    diff_path = os.path.join(output_dir, diff_file)
-    write_diff(file["druid"], reference, hypothesis, diff_path)
-
-    return {
-        "run_id": run_id,
-        "druid": file["druid"],
-        "file": os.path.basename(file["media_filename"]),
-        "transcript_filename": os.path.basename(file["transcript_filename"]),
-        "transcript_language": file["transcript_language"],
-        "wer": stats.wer,
-        "mer": stats.mer,
-        "wil": stats.wil,
-        "wip": stats.wip,
-        "hits": stats.hits,
-        "substitutions": stats.substitutions,
-        "insertions": stats.insertions,
-        "deletions": stats.deletions,
-        "language": lang,
-        "diff": diff_url,
-    }
 
 
 def read_reference_file(path):
@@ -220,3 +173,7 @@ def split_sentences(lines):
     sentences = [sentence.strip() for sentence in sentences]
 
     return sentences
+
+
+def seg2json(segment_list):
+    return {"segments": [{"start": seg.start, "end": seg.end, "text": seg.text} for seg in segment_list]}

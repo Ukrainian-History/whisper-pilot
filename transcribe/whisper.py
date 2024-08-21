@@ -20,7 +20,7 @@ from . import utils
 # The defaults are:
 #   beam_size: 5
 #   patience: 1
-#   condition_on_previous_text: True
+#   no_context: False
 #   best_of: 5
 
 # Here are some things to try if it gets stuck on phantom repeats: https://github.com/ggerganov/whisper.cpp/issues/896
@@ -29,7 +29,7 @@ whisper_options = {
     "model_name": ["medium", "large", "large-v3"],  # try a quantized one as well, maybe?
     "beam_size": [5, 10],
     "patience": [1.0, 2.0],
-    "condition_on_previous_text": [True, False],
+    "no_context": [True, False],
     "best_of": [5, 10],
 }
 
@@ -115,13 +115,8 @@ def run_whisper(file_metadata, options, output_dir):
     transcription = transcribe(file_metadata, options)
     runtime = utils.get_runtime(start_time)
 
-    result = utils.compare_transcripts(
-        file_metadata, transcription, "whisper", output_dir
-    )
-
-    result["druid"] = file_metadata["druid"]
-    result["runtime"] = runtime
-    result["options"] = str(options)
+    result = {"runtime": runtime, "options": str(options),
+              "run_id": f"{file_metadata['identifier']}_{file_metadata.get('offset_ms', '')}_{file_metadata.get('duration_ms', '')}"}
 
     # write out the json results
     with open(os.path.join(output_dir, f"{result['run_id']}.json"), "w") as fh:
@@ -136,23 +131,25 @@ def transcribe(file_metadata, options):
 
     whisper_options = options.copy()
     whisper_options.pop("model_name")
+    if "language" in file_metadata:
+        whisper_options["language"] = file_metadata["language"]
+    else:
+        whisper_options["language"] = "en"
+    timing_options = ("offset_ms", "duration_ms")
+    whisper_options.update({k: int(file_metadata[k]) for k in timing_options if k in file_metadata})
+    beam_search = {"beam_size": whisper_options.get("beam_size", -1),
+                   "patience": whisper_options.get("patience", -1.0)}
+    whisper_options.pop("beam_size", None)
+    whisper_options.pop("patience", None)
+    whisper_options["beam_search"] = beam_search
+    if "best_of" in whisper_options:
+        whisper_options["greedy"] = {"best_of": whisper_options["best_of"]}
+        del whisper_options["best_of"]
 
-    # if the languages of the source media and transcript are different and the
-    # transcript is to be in English then we tell Whisper to translate
-    if (
-        file_metadata["media_language"] != file_metadata["transcript_language"]
-        and file_metadata["transcript_language"] == "en"
-    ):
-        whisper_options["task"] = "translate"
-
-    whisper_options["language"] = file_metadata["media_language"]
     audio = load_audio(file_metadata["media_filename"])
 
     segments = model.transcribe(audio, **whisper_options)
-    # for segment in segments:
-    #     print(segment.text)
-
-    return segments
+    return utils.seg2json(segments)
 
 
 def get_silences(file):
