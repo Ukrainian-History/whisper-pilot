@@ -121,7 +121,7 @@ def wrap_lines(lines):
 
 def clean_text(lines):
     """
-    Normalize text for jiwer analysis.
+    Normalize text for analysis.
     """
     text = " ".join(lines)
     text = text.replace("\n", " ")
@@ -176,4 +176,4 @@ def split_sentences(lines):
 
 
 def seg2json(segment_list):
-    return {"segments": [{"start": seg.start, "end": seg.end, "text": seg.text} for seg in segment_list]}
+    return {"segments": [{"start": seg.t0, "end": seg.t1, "text": seg.text} for seg in segment_list]}

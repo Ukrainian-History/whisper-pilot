@@ -7,3 +7,4 @@ ENV
 data
 .idea
 *.xlsx
+output-*

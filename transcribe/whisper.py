@@ -115,8 +115,14 @@ def run_whisper(file_metadata, options, output_dir):
     transcription = transcribe(file_metadata, options)
     runtime = utils.get_runtime(start_time)
 
-    result = {"runtime": runtime, "options": str(options),
-              "run_id": f"{file_metadata['identifier']}_{file_metadata.get('offset_ms', '')}_{file_metadata.get('duration_ms', '')}"}
+    run_id = f"{file_metadata['identifier']}"
+    if "offset_ms" in file_metadata:
+        run_id += "_" + file_metadata["offset_ms"]
+    if "duration_ms" in file_metadata:
+        run_id += "_" + file_metadata["duration_ms"]
+    run_id += f"-{file_metadata['run_count']}"
+
+    result = {"runtime": runtime, "options": str(options), "run_id": run_id}
 
     # write out the json results
     with open(os.path.join(output_dir, f"{result['run_id']}.json"), "w") as fh:
