@@ -14,6 +14,7 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument("--output-dir", help="Path to a directory to write results")
 parser.add_argument("--manifest", default="uhec-data.csv", help="Path to data manifest CSV")
+parser.add_argument("--threads", help="Number of threads to run whisper.cpp")
 parser.add_argument(
     "--only",
     choices=["whisper", "preprocessing"],
@@ -41,6 +42,6 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-whisper.run(output_dir, args.manifest)
+whisper.run(output_dir, args.manifest, args.threads)
 print()
 whisper.run_preprocessing(output_dir, args.manifest)

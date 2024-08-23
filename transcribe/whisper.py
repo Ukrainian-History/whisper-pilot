@@ -43,7 +43,7 @@ preprocessing_combinations = [
 ]
 
 
-def run(output_dir, manifest):
+def run(output_dir, manifest, threads):
     combinations = list(whisper_option_combinations())
     files = utils.get_data_files(manifest)
     total = len(combinations) * len(files)
@@ -51,6 +51,7 @@ def run(output_dir, manifest):
 
     results = []
     for file_metadata in files:
+        file_metadata["threads"] = threads
         for options in combinations:
             file_metadata["run_count"] = len(results) + 1
             result = run_whisper(file_metadata, options, output_dir)
