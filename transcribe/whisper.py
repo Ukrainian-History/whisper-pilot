@@ -51,8 +51,9 @@ def run(output_dir, manifest, threads):
 
     results = []
     for file_metadata in files:
-        file_metadata["threads"] = threads
         for options in combinations:
+            if threads:
+                options["n_threads"] = int(threads)
             file_metadata["run_count"] = len(results) + 1
             result = run_whisper(file_metadata, options, output_dir)
             results.append(result)
