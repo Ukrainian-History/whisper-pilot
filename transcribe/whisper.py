@@ -111,9 +111,14 @@ def run_preprocessing(output_dir, manifest):
 
 
 def run_whisper(file_metadata, options, output_dir):
+    verbose = True
+
     start_time = datetime.now()
     file = file_metadata["media_filename"]
     logging.info("running whisper on %s with options %s", file, options)
+    if verbose:
+        options["new_segment_callback"] = print
+
     transcription = transcribe(file_metadata, options)
     runtime = utils.get_runtime(start_time)
 
