@@ -31,7 +31,7 @@ whisper_options = {
     "beam_size": [5, 10],
     "patience": [1.0, 2.0],
     "no_context": [True, False],
-    "best_of": [5, 10],
+    "best_of": [5, 8],
 }
 
 preprocessing_combinations = [
