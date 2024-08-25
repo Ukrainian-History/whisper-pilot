@@ -9,9 +9,10 @@ from datetime import datetime
 from functools import lru_cache
 from itertools import product
 
-import tqdm
 from pywhispercpp.model import Model
+from pywhispercpp.utils import *
 from pydub import AudioSegment
+import tqdm
 
 from . import utils
 
@@ -26,7 +27,7 @@ from . import utils
 # Here are some things to try if it gets stuck on phantom repeats: https://github.com/ggerganov/whisper.cpp/issues/896
 
 whisper_options = {
-    "model_name": ["medium", "large", "large-v3"],  # try a quantized one as well, maybe?
+    "model_name": ["medium", "large-v2", "large-v3"],  # try a quantized one as well, maybe?
     "beam_size": [5, 10],
     "patience": [1.0, 2.0],
     "no_context": [True, False],
@@ -43,7 +44,7 @@ preprocessing_combinations = [
 ]
 
 
-def run(output_dir, manifest, threads):
+def run(output_dir, manifest, threads, verbose):
     combinations = list(whisper_option_combinations())
     files = utils.get_data_files(manifest)
     total = len(combinations) * len(files)
@@ -54,13 +55,16 @@ def run(output_dir, manifest, threads):
         for options in combinations:
             if threads:
                 options["n_threads"] = int(threads)
+            if verbose:
+                options["new_segment_callback"] = print
+
             file_metadata["run_count"] = len(results) + 1
             result = run_whisper(file_metadata, options, output_dir)
             results.append(result)
             progress.update(1)
 
-    csv_filename = os.path.join(output_dir, "report-whisper.csv")
-    utils.write_report(results, csv_filename, extra_cols=["options"])
+    # csv_filename = os.path.join(output_dir, "report-whisper.csv")
+    # utils.write_report(results, csv_filename, extra_cols=["options"])
 
 
 def run_preprocessing(output_dir, manifest):
@@ -111,14 +115,9 @@ def run_preprocessing(output_dir, manifest):
 
 
 def run_whisper(file_metadata, options, output_dir):
-    verbose = True
-
     start_time = datetime.now()
     file = file_metadata["media_filename"]
     logging.info("running whisper on %s with options %s", file, options)
-    if verbose:
-        options["new_segment_callback"] = print
-
     transcription = transcribe(file_metadata, options)
     runtime = utils.get_runtime(start_time)
 
@@ -129,7 +128,16 @@ def run_whisper(file_metadata, options, output_dir):
         run_id += "_" + file_metadata["duration_ms"]
     run_id += f"-{file_metadata['run_count']}"
 
-    result = {"runtime": runtime, "options": str(options), "run_id": run_id}
+    output_txt(transcription["raw_segments"], f"{output_dir}/{run_id}")
+    output_vtt(transcription["raw_segments"], f"{output_dir}/{run_id}")
+    output_srt(transcription["raw_segments"], f"{output_dir}/{run_id}")
+    output_csv(transcription["raw_segments"], f"{output_dir}/{run_id}")
+
+    options.pop("new_segment_callback", None)
+    transcription.pop("raw_segments", None)
+
+    result = {"runtime": runtime, "options": options, "run_id": run_id}
+    transcription.update(result)
 
     # write out the json results
     with open(os.path.join(output_dir, f"{result['run_id']}.json"), "w") as fh:
@@ -162,7 +170,8 @@ def transcribe(file_metadata, options):
     audio = load_audio(file_metadata["media_filename"])
 
     segments = model.transcribe(audio, **whisper_options)
-    return utils.seg2json(segments)
+    output = {"raw_segments": segments, "segments": utils.seg2json(segments)}
+    return output
 
 
 def get_silences(file):
