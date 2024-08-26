@@ -27,7 +27,10 @@ from . import utils
 # Here are some things to try if it gets stuck on phantom repeats: https://github.com/ggerganov/whisper.cpp/issues/896
 
 whisper_options = {
-    "model_name": ["medium", "large-v2", "large-v3"],  # try a quantized one as well, maybe?
+    "model_name": ["medium", "large-v2", "large-v3"],
+    # "model_name": ["/home/ubuntu/whisper-pilot/pywhispercpp/whisper.cpp/models/ggml-medium.bin",
+    #                "/home/ubuntu/whisper-pilot/pywhispercpp/whisper.cpp/models/ggml-large-v2.bin",
+    #                "/home/ubuntu/whisper-pilot/pywhispercpp/whisper.cpp/models/ggml-large-v3.bin"],
     "beam_size": [5, 10],
     "patience": [1.0, 2.0],
     "no_context": [True, False],
@@ -50,8 +53,8 @@ def run(output_dir, manifest, threads, verbose):
     total = len(combinations) * len(files)
     progress = tqdm.tqdm(total=total, desc="whisper".ljust(10))
 
-    results = []
     for file_metadata in files:
+        results = []
         for options in combinations:
             if threads:
                 options["n_threads"] = int(threads)
@@ -63,8 +66,8 @@ def run(output_dir, manifest, threads, verbose):
             results.append(result)
             progress.update(1)
 
-    # csv_filename = os.path.join(output_dir, "report-whisper.csv")
-    # utils.write_report(results, csv_filename, extra_cols=["options"])
+        # csv_filename = os.path.join(output_dir, "report-whisper.csv")
+        # utils.write_report(results, csv_filename, extra_cols=["options"])
 
 
 def run_preprocessing(output_dir, manifest):
@@ -157,7 +160,8 @@ def transcribe(file_metadata, options):
     else:
         whisper_options["language"] = "en"
     timing_options = ("offset_ms", "duration_ms")
-    whisper_options.update({k: int(file_metadata[k]) for k in timing_options if k in file_metadata})
+    whisper_options.update({k: int(file_metadata[k]) for k in timing_options
+                            if file_metadata[k] and file_metadata[k] != ""})
     beam_search = {"beam_size": whisper_options.get("beam_size", -1),
                    "patience": whisper_options.get("patience", -1.0)}
     whisper_options.pop("beam_size", None)

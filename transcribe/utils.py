@@ -1,4 +1,5 @@
 import csv
+import json
 import datetime
 import difflib
 import os
@@ -40,6 +41,44 @@ def get_data_files(manifest):
 def get_runtime(start_time):
     elapsed = datetime.datetime.now() - start_time
     return elapsed.total_seconds()
+
+
+### The following three functions are AI-generated placeholders to do JSON processing
+### that may eventually be completely eliminated...
+
+def flatten_json(data, parent_key=''):
+    flat_data = []
+    for k, v in data.items():
+        new_key = f"{parent_key}.{k}" if parent_key else k
+        if isinstance(v, dict):
+            flat_data.extend(flatten_json(v, new_key))
+        elif isinstance(v, list):
+            for i, item in enumerate(v):
+                flat_data.append(f"{new_key}[{i}]={json.dumps(item)}")
+        else:
+            flat_data.append(f"{new_key}={v}")
+    return flat_data
+
+
+def generate_csv(data):
+    csv_data = []
+    for row in data.values():
+        csv_row = [row.get(k, '') for k in data.keys()]
+        csv_data.append(csv_row)
+    return csv_data
+
+
+def json_to_csv(json_data, csv_output_path):
+    flat_data = flatten_json(json_data)
+    csv_data = generate_csv(flat_data)
+
+    with open(csv_output_path, 'w', newline='') as csv_file:
+        writer = csv.writer(csv_file)
+        header = list(flat_data[0].split('=')[0])
+        writer.writerow(header)
+
+        for row in csv_data:
+            writer.writerow(row)
 
 
 def write_report(rows, csv_path, extra_cols=[]):
